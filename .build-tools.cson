@@ -1,0 +1,37 @@
+providers: [
+  {
+    key: "bt"
+    config:
+      commands: []
+  }
+  {
+    key: "bt"
+    config:
+      commands: [
+        {
+          project: "/home/valentijn/dxf/dxflib"
+          source: "/home/valentijn/dxf/dxflib/.build-tools.cson"
+          name: "run"
+          command: "/build/bezier/dxftest willekeurige_tekst.dxf"
+          wd: "/build/bezier"
+          env: {}
+          modifier: {}
+          environment:
+            name: "child_process"
+            config:
+              stdoe: "both"
+          stdout:
+            pipeline: []
+          stderr:
+            pipeline: []
+          output:
+            console:
+              close_success: true
+              queue_in_buffer: true
+              colors: false
+              stdin: false
+          version: 2
+        }
+      ]
+  }
+]
