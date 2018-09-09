@@ -169,203 +169,7 @@ int bezierSegment::scale(double ox, double oy, double scalefac) {
 / tx is t waarde van nieuwe x coordinaat (x0 +/- stepSize)
 ******************************************************************************/
 
-// ph is huidige positie
-// pvB is volgende positie boven ph
-// pvO is volgende positie inder ph
 
-double bezierSegment::next(int axis) {
-  double p1, p4;
-  int dir;
-  if (axis == X) {
-    p1 = x1;
-    p4 = x4;
-    dir = dirX;
-  } else {
-    p1 = y1;
-    p4 = y4;
-    dir = dirY;
-  }
-
-  switch (dir) {
-  case RCMIN: {
-    double psize = (p1 - p4) / 7.0;
-    for (double p = p4; p <= p1; p += psize) {
-      cout << cubicRoots(axis, p, root) << "|";
-      if (inRange(root[0]))
-        cout << " b " << root[0];
-      if (inRange(root[1]))
-        cout << " b " << root[1];
-      if (inRange(root[2]))
-        cout << " b " << root[2];
-      cout << endl;
-    }
-    break;
-  }
-  case RCPLUS: {
-    double psize = (p4 - p1) / 7.0;
-    for (double p = p1; p <= p4; p += psize) {
-      cout << cubicRoots(axis, p, root) << "|";
-      if (inRange(root[0]))
-        cout << " a " << root[0];
-      if (inRange(root[1]))
-        cout << " a " << root[1];
-      if (inRange(root[2]))
-        cout << " a " << root[2];
-      cout << endl;
-    }
-    break;
-  }
-  case RCHOL: {
-    cout << "**********************************  Hol" << endl;
-    break;
-  }
-  case RCBOL: {
-    cout << "**********************************  Bol" << endl;
-    break;
-  }
-  }
-  return 0.0;
-}
-
-double bezierSegment::next2(int axis, double *cut, double *t) {
-  //  double pb = *cut + stepSize
-  double stepSize = 4.03723587505742E-05;
-  double pb = *cut + stepSize;
-  double po = *cut - stepSize;
-  int numberOfRoots = cubicRoots(axis, pb, root);
-  int n = 0;
-  for (int i = 0; i < numberOfRoots; i++) {
-    //  cout << i << " r " << root[i] << " ";
-    if (inRange(root[i])) {
-      cout << "   up root " << i << " " << numberOfRoots << " "
-           << " -" << root[i];
-      n++;
-    }
-  }
-  numberOfRoots = cubicRoots(axis, po, root);
-  n = 0;
-  for (int i = 0; i < numberOfRoots; i++) {
-    //  cout << i << " r " << root[i] << " ";
-    if (inRange(root[i])) {
-      cout << " down root " << i << " " << numberOfRoots << " "
-           << " -" << root[i];
-      n++;
-    }
-  }
-  // if (n == 0)
-  // cout << " n= " << n << " roots# " << numberOfRoots;
-  return 0;
-}
-
-int bezierSegment::cubicRoots(int axis, double cut, double *roots) {
-  double a, b, c, d;
-  roots[0] = -0.1;
-  roots[1] = -0.1;
-  roots[2] = -0.1;
-
-  double p1, p2, p3, p4;
-  if (axis == X) {
-    p1 = x1 - cut;
-    p2 = x2 - cut;
-    p3 = x3 - cut;
-    p4 = x4 - cut;
-  } else {
-    p1 = y1 - cut;
-    p2 = y2 - cut;
-    p3 = y3 - cut;
-    p4 = y4 - cut;
-  }
-
-  a = p4 - p1 + 3.0 * (p2 - p3);
-  b = 3.0 * (p1 - 2.0 * p2 + p3);
-  c = 3.0 * (p2 - p1);
-  d = p1;
-  int numberOfRoots = 1;
-
-  // Simple cases with linear, quadratic or invalid equations
-  if (almostZero(a)) {
-    if (almostZero(b)) {
-      if (almostZero(c))
-        return 0;
-      roots[0] = -d / c;
-      numberOfRoots = 1;
-      return numberOfRoots;
-    }
-    const float discriminant = c * c - 4.0 * b * d;
-    if (discriminant < 0.0) {
-      numberOfRoots = 0;
-      return numberOfRoots;
-    }
-
-    if (almostZero(discriminant)) {
-      roots[0] = -c / (2.0 * b);
-      numberOfRoots = 1;
-      return numberOfRoots;
-    }
-    roots[0] = (-c + sqrt(discriminant)) / (2.0 * b);
-    roots[1] = (-c - sqrt(discriminant)) / (2.0 * b);
-    numberOfRoots = 2;
-    return numberOfRoots;
-  }
-  //  s = -a/3.0 + ()
-  // See
-  // https://en.wikipedia.org/wiki/Cubic_function#General_solution_to_the_cubic_equation_with_real_coefficients
-  // for a description. We depress the general cubic to a form that can more
-  // easily be solved. Solve it and then
-  // substitue the results back to get the roots of the original cubic.
-
-  // Put cubic into normal format: x^3 + Ax^2 + Bx + C = 0
-  const double A = b / a;
-  const double B = c / a;
-  const double C = d / a;
-  // Substitute x = y - A/3 to eliminate quadratic term (depressed form):
-  // x^3 + px + q = 0
-  const double Asq = A * A;
-  const double p = oneThird * (-oneThird * Asq + B);
-  const double q = 1.0 / 2.0 * (2.0 / 27.0 * A * Asq - oneThird * A * B + C);
-  // Use Cardano's formula
-  const double pCubed = p * p * p;
-  const double discriminant = q * q + pCubed;
-  if (almostZero(discriminant)) {
-    if (q == 0.0) {
-      // One repeated triple root
-      roots[0] = 0.0;
-      numberOfRoots = 1;
-    } else {
-      // One single and one double root
-      double u = pow(-q, oneThird);
-      roots[0] = 2.0 * u;
-      roots[1] = -u;
-      numberOfRoots = 2;
-    }
-  } else if (discriminant < 0) {
-    // Three real solutions
-    double phi = oneThird * acos(-q / sqrt(-pCubed));
-    double t = 2.0 * sqrt(-p);
-    roots[0] = t * cos(phi);
-    roots[1] = -t * cos(phi + piByThree);
-    roots[2] = -t * cos(phi - piByThree);
-    numberOfRoots = 3;
-  } else {
-    // One real solution
-    double sqrtDisc = sqrt(discriminant);
-    double u = qCbrt(sqrtDisc - q);
-    double v = -qCbrt(sqrtDisc + q);
-    roots[0] = u + v;
-    numberOfRoots = 1;
-  }
-  // Substitute back in
-  const double sub = oneThird * A;
-  for (int i = 0; i < numberOfRoots; ++i) {
-    roots[i] -= sub;
-    // Take care of cases where we are close to zero or one
-    if (almostZero(roots[i]))
-      roots[i] = 0.f;
-    if (almostZero(roots[i] - 1.0))
-      roots[i] = 1.0;
-  }
-  return numberOfRoots;
-}
 
 double bezierSegment::ttLengte(double ts, double te) { // t start; t eind
   double l;                                            // resulterende lengte
@@ -448,74 +252,19 @@ int bezierSegment::print(int axis) {
 }
 
 
-int bezierSegment::getDirection(int axis) {
-  double p1, p2, p3, p4;
-  if (axis == X) {
-    p1 = x1;
-    p2 = x2;
-    p3 = x3;
-    p4 = x4;
-  } else {
-    p1 = y1;
-    p2 = y2;
-    p3 = y3;
-    p4 = y4;
-  }
-  double pt0;
-  double pt1;
-  cout.precision(15);
-  //  cout << p1 << "  " << p2 << "  " << p3 << "  " << p4 << "  ";
-  double a, b, c, d;
-  a = (-p1 + (3.0 * p2) - (3.0 * p3) + p4) * 3.0;
-  //  cout << a << "  ";
-  b = 6.0 * (p1 - 2.0 * p2 + p3);
-  //  cout << b << "  ";
-  c = 3.0 * (p1 - p2);
-  //  cout << c << "  ";
-
-  pt0 = 3.0 * (p2 - p1);
-  pt1 = 3.0 * (p4 - p3);
-  d = (b * b) - (4 * a * c);
-  // cout << d << "  ";
-  if (d > 0.0) {
-    double sqrtd = sqrt(d);
-    double sol1 = (-b - sqrtd) / (2.0 * a);
-    double sol2 = (-b + sqrtd) / (2.0 * a);
-
-    if ((sol1 > 0.0) && (sol1 < 1.0))
-      if (pt0 > 0.0) {
-        direction = RCBOL;
-      } else {
-        direction = RCHOL;
-      }
-
-    if ((sol2 > 0.0) && (sol2 < 1.0))
-      if (pt0 > 0.0) {
-        direction = RCBOL;
-      } else {
-        direction = RCHOL;
-      }
-  } else {
-    if (pt0 * pt1 > 0)
-      if (pt0 > 0) {
-        direction = RCPLUS;
-      } else {
-        direction = RCMIN;
-      }
-  }
-
-  return direction;
-}
 /***********************************************
  * definities van bezier class functies
  **********************************************/
-Bezier::Bezier() {
+Bezier::Bezier(unsigned long _aantal) {
   knooppunten = 0;
   id = 1;
   minX = 1000000.0;
   maxX = -1000000.0;
   minY = 1000000.0;
   maxY = -1000000.0;
+  aantal = _aantal;
+  starTrail =  new trail(aantal);
+  textTrail =  new trail(aantal);
   stepSize = 2.2429e-7; // grootte van een stap van de motor.
 }
 
@@ -614,13 +363,6 @@ double Bezier::calcLengte() {
   return lengte;
 }
 
-int Bezier::segmentDirections() {
-  for (it = segments.begin(); it != segments.end(); it++) {
-    it->getDirection(X);
-  }
-  return 0;
-}
-
 int Bezier::devideOnT(
     int n, int aantal) { // n = startpunt in list, aantal = extra punten
   double fac;
@@ -631,7 +373,9 @@ int Bezier::devideOnT(
   knooppunten += (aantal - 1) * 3;
   return aantal;
 }
-
+// int Bezier::calcTextTrail(){
+//   for(unsigned long i)
+// }
 int Bezier::splitOnT(int n, double t) {
   double x2, y2;
   double x3, y3;
@@ -680,38 +424,6 @@ int Bezier::setStepSize(double _stepSize) {
   return 0;
 }
 
-int Bezier::calcIntervals(int axis) {
-  int n = 0;
-  double tijd = 0.0;
-  double segStep;
-  it = segments.begin();
-  if (axis == X) {
-    ph = it->x1;
-  } else {
-    ph = it->y1;
-  }
-
-  for (it = segments.begin(); it != segments.end(); it++) {
-    segLen = 0.0;
-    while (segLen < 10.0) {
-      //  segLen = (it->next(Y))*3600.0/textLengte;
-      segLen = (it->next(axis));
-      if (segLen < 10.0) {
-        tijd += segLen * 3600.0 / textLengte;
-        //    cout << int(segLen * 200000000) << endl;
-      } else {
-        segStep = segLen - 10.0;
-        tijd += segStep * 3600.0 / textLengte;
-        //    cout << int(segStep * 200000000) << endl;
-      }
-      n++;
-    }
-    // cout << "nextX = " << ts << " Nr " << i++ << endl;
-    it->t0 = 0;
-  }
-  cout << "tijd = " << tijd;
-  return n;
-}
 
 int Bezier::divideToLine(int aantal){
   const double timeSeg = textLengte / aantal;
@@ -720,9 +432,7 @@ int Bezier::divideToLine(int aantal){
   double t;
   for (it = segments.begin(); it != segments.end(); it++) {
     t = 0.0;
-    cout << "--> ";
     while ((t = it->t_atLengthD(t, timeSegTMP)) > 0) {
-      cout << t << " ";
       timeSegTMP = timeSeg;
       n++;
     }
@@ -741,7 +451,7 @@ trail::trail() {
   end = 0;
 }
 
-trail::trail(int _aantal) {
+trail::trail(long _aantal) {
   aantal = _aantal;
   x = new double[aantal];
   y = new double[aantal];

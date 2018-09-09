@@ -51,11 +51,13 @@ using namespace std;
 #define X 1
 #define Y 2
 
-#define SEGMENTDEEL 10000 // aantal delen per segement om de lengte te berekenen
+#define SEGMENTDEEL 100000 // aantal delen per segement om de lengte te berekenen
 extern double stepSize;
 extern double ph;
 
 class Bezier;
+class trail;
+
 bool inRange(double);
 
 class bezierSegment {
@@ -77,15 +79,9 @@ public:
   double tDevider; // ondervedeling voor de berkening van t
   int print();
   double type;
-  int direction;
-  int getDirection(int);
-  double d; // beziercoefficient
   double t0;
-  int cubicRoots(int, double, double *);
-  double root[3];
   int print(int);
   double t_atLengthD(double, double);
-
 private:
   double curveLengte;
   double Xcoeffs[4]; // beziercoefficient
@@ -102,7 +98,8 @@ private:
 
 class Bezier : public DL_CreationAdapter {
 public:
-  Bezier();
+  Bezier(unsigned long);
+  unsigned int aantal;
   int knooppunten;
   double lengte;
   double calcLengte();
@@ -118,10 +115,13 @@ public:
   double midX;
   double midY;
   double textLengte;
+
   list<bezierSegment> segments;
   bezierSegment segment;
   bezierSegment segmentToT; // shegment tot t
   double segLen;
+  trail *starTrail;
+  trail *textTrail;
   int segmentDirections(); // bereken de richting van de segmenten
   void addControlPoint(const DL_ControlPointData &data);
   int correctCurve(); // p4(i) = p1(i-1) tussen p2(i)en p3(i-1)
@@ -134,7 +134,6 @@ public:
   int setStepSize(double);
   int calcIntervals(int);
   int divideToLine(int);
-  // aan list en verander restsegment.
 private:
   list<bezierSegment>::iterator it;
 };
@@ -143,11 +142,11 @@ class trail {
 public:
   double *x;
   double *y;
-  int aantal;
+  long aantal;
   int add(double, double);
-  int end;
+  long end;
   trail();
-  trail(int);
+  trail(long);
   ~trail();
 };
 

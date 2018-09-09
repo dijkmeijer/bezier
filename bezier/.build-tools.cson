@@ -8,7 +8,7 @@ providers: [
           source: "/home/valentijn/dxf/dxflib/bezier/.build-tools.cson"
           name: "make"
           command: "make"
-          wd: "../build"
+          wd: "../../build"
           env: {}
           modifier:
             save_all: {}

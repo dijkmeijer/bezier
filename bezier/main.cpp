@@ -62,7 +62,7 @@ void usage() { cout << "\nUsage: test <DXF file>\n\n"; }
 void ReadingDXF(char *file, int out) {
   // Load DXF file into memory:
   //  cout << "Reading file " << file << "...\n";
-  Bezier *bezier = new Bezier();
+  Bezier *bezier = new Bezier(10000);
   DL_Dxf *dxf = new DL_Dxf();
   if (!dxf->in(file, bezier)) { // if file open failed
     cerr << file << " could not be opened.\n";
@@ -74,19 +74,17 @@ void ReadingDXF(char *file, int out) {
   list<bezierSegment>::iterator it;
 
   if (out == 1)
-    cout << "Totale lengte = " << bezier->calcLengte()
-         << " knooppunten: " << (bezier->knooppunten / 3) << endl;
+    cout << "Totale lengte = " << bezier->calcLengte() << endl;
 
   //  bereken de trail
-  int aantal = 10000;
-  trail startrail(aantal);
   double xLengte = bezier->minX - bezier->maxX;
-  double xFac = xLengte / aantal;
-  double halfAantal = aantal / 2.0;
-  for (int i = 0; i < aantal; i++) {
-    startrail.add((i - halfAantal) * xFac, (i - halfAantal) * xFac);
+  double xFac = xLengte / bezier->aantal;
+  double halfAantal = bezier->aantal / 2.0;
+  for (int i = 0; i < bezier->aantal; i++) {
+    bezier->starTrail->add((i - halfAantal) * xFac, (i - halfAantal) * xFac);
   }
 
+  
   if (out == 2) {
 
     for (it = bezier->segments.begin(); it != bezier->segments.end(); it++) {
@@ -98,21 +96,9 @@ void ReadingDXF(char *file, int out) {
   }
   if (out == 1) {
     bezier->setStepSize(4.03723587505742E-05);
-    const double timeSeg = bezier->textLengte / aantal;
+    const double timeSeg = bezier->textLengte / bezier->aantal;
 
-    // double timeSegTMP = timeSeg;
-    // int n = 0;
-    // for (it = bezier->segments.begin(); it != bezier->segments.end(); it++) {
-    //   t = 0.0;
-    //   cout << "--> ";
-    //   while ((t = it->t_atLengthD(t, timeSegTMP)) > 0) {
-    //     cout << t << " ";
-    //     timeSegTMP = timeSeg;
-    //     n++;
-    //   }
-    //   timeSegTMP = timeSeg + t;
-    // }
-    cout << "\naantal lijnen = " << bezier->divideToLine(aantal) << endl;
+    cout << "\naantal lijnen = " << bezier->divideToLine(bezier->aantal) << endl;
   }
   delete dxf;
   delete bezier;
