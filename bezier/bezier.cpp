@@ -43,7 +43,6 @@ inline double qCbrt(double x) {
     return 0.0;
 }
 
-
 bezierSegment::bezierSegment() {
   x1 = 0.0;
   y1 = 0.0;
